@@ -108,9 +108,14 @@ class WechatChannel(Channel):
                 return
             context = dict()
             context['from_user_id'] = reply_user_id
+            # 这里的代码有点丑，其实能重构，有点懒，又不是不能用
+            if context.startswith(conf().get('code_type_prefix')):
+                context['type'] = 'CODE'
             reply_text = super().build_reply_content(query, context).strip()
             if reply_text:
                 self.send(conf().get("single_chat_reply_prefix") + reply_text, reply_user_id)
+            else:
+                self.send(conf().get("single_chat_reply_prefix") + '我罢工啦，不想理你~', reply_user_id)
         except Exception as e:
             logger.exception(e)
 
@@ -142,10 +147,14 @@ class WechatChannel(Channel):
             return
         context = dict()
         context['from_user_id'] = msg['ActualUserName']
+        if context.startswith(conf().get('code_type_prefix')):
+            context['type'] = 'CODE'
         reply_text = super().build_reply_content(query, context)
         reply_text = '@' + msg['ActualNickName'] + ' ' + reply_text.strip()
         if reply_text:
             self.send(reply_text, msg['User']['UserName'])
+        else:
+            self.send('我罢工啦，不想理你~', msg['User']['UserName'])
 
     def check_prefix(self, content, prefix_list):
         for prefix in prefix_list:
